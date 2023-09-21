@@ -4,6 +4,9 @@ enableAuth: true
 key: 'change_me'
 normalizeMessages: true
 
+#In minutes
+jwtExpirationTime: 15
+
 # TLS (a.k.a. SSL) options
 tls:
   # Set to true to enable TLS

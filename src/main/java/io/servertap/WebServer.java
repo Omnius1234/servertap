@@ -63,6 +63,8 @@ public class WebServer {
     private final int securePort;
     private static List<Map<String, String>> users;
 
+    private static Integer jwtExpirationTime = 15;
+
     public WebServer(ServerTapMain main, FileConfiguration bukkitConfig, Logger logger) {
         this.log = logger;
 
@@ -78,6 +80,7 @@ public class WebServer {
         this.corsOrigin = bukkitConfig.getStringList("corsOrigins");
         this.securePort = bukkitConfig.getInt("port", 4567);
         this.javalin = Javalin.create(config -> configureJavalin(config, main));
+        jwtExpirationTime = bukkitConfig.getInt("jwtExpirationTime", 15);
 
         String usersFilePath = main.getDataFolder().getAbsolutePath() + File.separator + "users.yml";
         Yaml yaml = new Yaml();
@@ -124,20 +127,20 @@ public class WebServer {
         return claims.getSubject();
     }
 
+
     public static String generateJWT(String uuid) {
         Key key = new SecretKeySpec(authKey.getBytes(), SignatureAlgorithm.HS256.getJcaName());
+
         return Jwts
                 .builder()
                 .setSubject(uuid)
-                .setExpiration(new Date(System.currentTimeMillis() + 30000))
+                .setExpiration(new Date(System.currentTimeMillis() + (jwtExpirationTime * 60 * 1000)))
                 .signWith(key)
                 .compact();
     }
 
     public static boolean validateCredentials(String username, String password) {
         if (users != null) {
-            String pwd_hash = BCrypt.hashpw(password, BCrypt.gensalt(12));
-            System.out.println(pwd_hash);
             for (Map<String, String> user : users) {
                 if (user.get("username").equals(username) && BCrypt.checkpw(password, user.get("password"))) {
                     return true;

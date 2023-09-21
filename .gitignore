@@ -3,6 +3,7 @@
 
 .DS_STORE
 target/
+gen/
 dependency-reduced-pom.xml
 .classpath
 .project
