@@ -3,17 +3,14 @@ package io.servertap.api.v1;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import de.tr7zw.nbtapi.NBTFile;
-import de.tr7zw.nbtapi.NBTGameProfile;
+import de.tr7zw.nbtapi.plugin.tests.GameprofileTest;
 import io.javalin.http.*;
 import io.javalin.openapi.*;
 import io.servertap.Constants;
 import io.servertap.api.v1.models.ItemStack;
 import io.servertap.api.v1.models.Player;
 import io.servertap.utils.pluginwrappers.EconomyWrapper;
-import org.bukkit.Bukkit;
-import org.bukkit.Location;
-import org.bukkit.OfflinePlayer;
-import org.bukkit.World;
+import org.bukkit.*;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -47,28 +44,13 @@ public class PlayerApi {
         return uuid;
     }
 
-    public String getPLayerTextures(String mojangUuid) {
-        String textures = "";
-        try{
-            if(mojangUuid.matches("(\\w{8})(\\w{4})(\\w{4})(\\w{4})(\\w{12})")){
-                String base_url = "https://sessionserver.mojang.com/session/minecraft/profile/" + mojangUuid;
-                BufferedReader in = new BufferedReader(new InputStreamReader(new URL(base_url).openStream()));
-                JsonObject jo = (JsonObject) new JsonParser().parse(in);
-                textures = jo.getAsJsonArray("properties").get(0).toString();
-            }
-        }catch (Exception e) {
-            System.out.println("Unable to get PLayer Textures of: " + mojangUuid + "!");
-        }
-        return textures;
-    }
-
     @OpenApi(
             path = "/v1/players",
             summary = "Gets all currently online players",
             tags = {"Player"},
-            headers = {
-                    @OpenApiParam(name = "key")
-            },
+            security = @OpenApiSecurity(
+                    name = "BearerAuth"
+            ),
             responses = {
                     @OpenApiResponse(status = "200", content = @OpenApiContent(from = Player.class))
             }
@@ -86,9 +68,9 @@ public class PlayerApi {
             methods = {HttpMethod.GET},
             summary = "Gets a specific online player by their UUID",
             tags = {"Player"},
-            headers = {
-                    @OpenApiParam(name = "key")
-            },
+            security = @OpenApiSecurity(
+                    name = "BearerAuth"
+            ),
             pathParams = {
                     @OpenApiParam(name = "uuid", description = "UUID of the player")
             },
@@ -157,7 +139,7 @@ public class PlayerApi {
 
         p.setLastPlayed(player.getLastPlayed());
 
-        p.setTextures(getPLayerTextures(p.getMojangUuid()));
+        p.setTextures("");
 
         return p;
     }
@@ -166,9 +148,9 @@ public class PlayerApi {
             path = "/v1/players/all",
             summary = "Gets all players that have ever joined the server ",
             tags = {"Player"},
-            headers = {
-                    @OpenApiParam(name = "key")
-            },
+            security = @OpenApiSecurity(
+                    name = "BearerAuth"
+            ),
             responses = {
                     @OpenApiResponse(status = "200", content = @OpenApiContent(from = io.servertap.api.v1.models.OfflinePlayer.class))
             }
@@ -205,9 +187,9 @@ public class PlayerApi {
             methods = {HttpMethod.GET},
             summary = "Gets a specific online player's Inventory in the specified world",
             tags = {"Player"},
-            headers = {
-                    @OpenApiParam(name = "key")
-            },
+            security = @OpenApiSecurity(
+                    name = "BearerAuth"
+            ),
             pathParams = {
                     @OpenApiParam(name = "playerUuid", description = "UUID of the player"),
                     @OpenApiParam(name = "worldUuid", description = "UUID of the world")

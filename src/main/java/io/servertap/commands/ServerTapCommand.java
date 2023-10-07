@@ -44,6 +44,7 @@ public class ServerTapCommand implements CommandExecutor, TabCompleter {
                     commandSender.sendMessage(String.format("%sServerTap Plugin Information:\n%sVersion: %s%s\n%sWebsite: %s%s\n%sAuthors: %s%s",
                             BLUE, BLUE, AQUA, version, BLUE, AQUA, website, BLUE, AQUA, authors));
                     break;
+                case "add_user":
                 default:
                     commandSender.sendMessage(String.format("%s[%sServerTap%s] %sUnknown Command.", DARK_GRAY, BLUE, DARK_GRAY, AQUA));
                     return false;

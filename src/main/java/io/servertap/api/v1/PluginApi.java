@@ -33,9 +33,9 @@ public class PluginApi {
             summary = "Get a list of installed plugins",
             description = "Responds with an array of objects containing keys name and enabled.",
             tags = {"Plugins"},
-            headers = {
-                    @OpenApiParam(name = "key")
-            },
+            security = @OpenApiSecurity(
+                    name = "BearerAuth"
+            ),
             responses = {
                     @OpenApiResponse(status = "200", content = @OpenApiContent(type = "application/json"))
             }
@@ -66,9 +66,9 @@ public class PluginApi {
             methods = {HttpMethod.POST},
             summary = "Download and install a plugin from a URL (URL MUST be urlencoded)",
             tags = {"Plugins"},
-            headers = {
-                    @OpenApiParam(name = "key")
-            },
+            security = @OpenApiSecurity(
+                    name = "BearerAuth"
+            ),
             requestBody = @OpenApiRequestBody(
                     required = true,
                     content = {

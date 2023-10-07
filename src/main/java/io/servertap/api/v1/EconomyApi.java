@@ -34,9 +34,9 @@ public class EconomyApi {
             methods = {HttpMethod.GET},
             summary = "Economy plugin information",
             tags = {"Economy"},
-            headers = {
-                    @OpenApiParam(name = "key")
-            },
+            security = @OpenApiSecurity(
+                    name = "BearerAuth"
+            ),
             responses = {
                     @OpenApiResponse(status = "200", content = @OpenApiContent(type = "application/json")),
                     @OpenApiResponse(status = "500", content = @OpenApiContent(type = "application/json"))
@@ -68,9 +68,9 @@ public class EconomyApi {
             summary = "Pay a player",
             description = "Deposits the provided amount into the player's Vault",
             tags = {"Economy"},
-            headers = {
-                    @OpenApiParam(name = "key")
-            },
+            security = @OpenApiSecurity(
+                    name = "BearerAuth"
+            ),
             requestBody = @OpenApiRequestBody(
                     required = true,
                     content = {
@@ -98,9 +98,9 @@ public class EconomyApi {
             summary = "Debit a player",
             description = "Withdraws the provided amount out of the player's Vault",
             tags = {"Economy"},
-            headers = {
-                    @OpenApiParam(name = "key")
-            },
+            security = @OpenApiSecurity(
+                    name = "BearerAuth"
+            ),
             requestBody = @OpenApiRequestBody(
                     required = true,
                     content = {

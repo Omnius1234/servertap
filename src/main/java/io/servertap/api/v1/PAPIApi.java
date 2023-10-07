@@ -17,9 +17,9 @@ public class PAPIApi {
             summary = "Process a string using PlaceholderAPI",
             description = "Process a string using PlaceholderAPI",
             tags = {"PlaceholderAPI"},
-            headers = {
-                    @OpenApiParam(name = "key")
-            },
+            security = @OpenApiSecurity(
+                    name = "BearerAuth"
+            ),
             requestBody = @OpenApiRequestBody(
                     required = true,
                     content = {

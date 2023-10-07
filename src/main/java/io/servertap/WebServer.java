@@ -5,29 +5,20 @@ import io.javalin.Javalin;
 import io.javalin.community.ssl.SSLPlugin;
 import io.javalin.config.JavalinConfig;
 import io.javalin.http.*;
-import io.javalin.openapi.BasicAuth;
-import io.javalin.openapi.BearerAuth;
-import io.javalin.openapi.SecurityScheme;
+import io.javalin.http.Header;
+import io.javalin.openapi.*;
 import io.javalin.openapi.plugin.OpenApiPlugin;
 import io.javalin.openapi.plugin.OpenApiPluginConfiguration;
+import io.javalin.openapi.plugin.SecurityComponentConfiguration;
 import io.javalin.openapi.plugin.swagger.SwaggerConfiguration;
 import io.javalin.openapi.plugin.swagger.SwaggerPlugin;
 import io.javalin.security.RouteRole;
 import io.javalin.websocket.WsConfig;
-import io.jsonwebtoken.Claims;
-import io.jsonwebtoken.Jws;
-import io.jsonwebtoken.Jwts;
-import io.jsonwebtoken.SignatureAlgorithm;
+import io.jsonwebtoken.*;
 import io.servertap.utils.GsonJsonMapper;
-import org.apache.commons.io.FileUtils;
-import org.bukkit.Bukkit;
 import org.bukkit.configuration.ConfigurationSection;
-import org.bukkit.configuration.InvalidConfigurationException;
 import org.bukkit.configuration.file.FileConfiguration;
-import org.bukkit.configuration.file.YamlConfiguration;
-import org.bukkit.plugin.Plugin;
 import org.springframework.security.crypto.bcrypt.BCrypt;
-import org.yaml.snakeyaml.Yaml;
 
 import java.io.*;
 import java.nio.charset.StandardCharsets;
@@ -58,10 +49,9 @@ public class WebServer {
     private final boolean sni;
     private final String keyStorePath;
     private final String keyStorePassword;
-    private static String authKey = "";
+    public static String authKey = "";
     private final List<String> corsOrigin;
     private final int securePort;
-    private static List<Map<String, String>> users;
 
     private static Integer jwtExpirationTime = 15;
 
@@ -82,14 +72,6 @@ public class WebServer {
         this.javalin = Javalin.create(config -> configureJavalin(config, main));
         jwtExpirationTime = bukkitConfig.getInt("jwtExpirationTime", 15);
 
-        String usersFilePath = main.getDataFolder().getAbsolutePath() + File.separator + "users.yml";
-        Yaml yaml = new Yaml();
-        try (InputStream in = new FileInputStream(usersFilePath)) {
-            Map<String, List<Map<String, String>>> yamlData = yaml.load(in);
-            users = yamlData.get("users");
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
 
         if (bukkitConfig.getBoolean("debug")) {
             this.javalin.before(ctx -> log.info(ctx.req().getPathInfo()));
@@ -116,17 +98,18 @@ public class WebServer {
             config.plugins.register(new OpenApiPlugin(openApiConfig));
             SwaggerConfiguration swaggerConfiguration = new SwaggerConfiguration();
             swaggerConfiguration.setDocumentationPath("/swagger-docs");
+
             config.plugins.register(new SwaggerPlugin(swaggerConfiguration));
         }
     }
 
-    private static String checkJWT(String authKey, String token) {
+    public static String checkJWT(String token) {
         Key key = new SecretKeySpec(authKey.getBytes(), SignatureAlgorithm.HS256.getJcaName());
-        Jws<Claims> claimsJws = Jwts.parserBuilder().build().parseClaimsJws(token);
+        Jws<Claims> claimsJws = Jwts.parserBuilder().setSigningKey(key).build().parseClaimsJws(token);
         Claims claims = claimsJws.getBody();
+
         return claims.getSubject();
     }
-
 
     public static String generateJWT(String uuid) {
         Key key = new SecretKeySpec(authKey.getBytes(), SignatureAlgorithm.HS256.getJcaName());
@@ -134,20 +117,10 @@ public class WebServer {
         return Jwts
                 .builder()
                 .setSubject(uuid)
+                .setIssuedAt(new Date())
                 .setExpiration(new Date(System.currentTimeMillis() + (jwtExpirationTime * 60 * 1000)))
                 .signWith(key)
                 .compact();
-    }
-
-    public static boolean validateCredentials(String username, String password) {
-        if (users != null) {
-            for (Map<String, String> user : users) {
-                if (user.get("username").equals(username) && BCrypt.checkpw(password, user.get("password"))) {
-                    return true;
-                }
-            }
-        }
-        return false;
     }
 
     /**
@@ -167,14 +140,14 @@ public class WebServer {
 
         // Auth is turned on, make sure there is a header called "key"
         String authHeader = ctx.header(SERVERTAP_KEY_HEADER);
-        if (authHeader != null && WebServer.checkJWT(authKey, authHeader) != null) {    // TODO: does checkJWT return null if invalid jwt? is authHeader a valid token or does it contains the Bearer string part?
+        if (authHeader != null && authHeader.contains("Bearer") && WebServer.checkJWT(authHeader.split("Bearer")[1]) != null) {
             handler.handle(ctx);
             return;
         }
 
         // If the request is still not handled, check for a cookie (websockets use cookies for auth)
         String authCookie = ctx.cookie(SERVERTAP_KEY_COOKIE);
-        if (authCookie != null && WebServer.checkJWT(authKey, authCookie) != null) {    // TODO: does checkJWT return null if invalid jwt? is authCookie a valid token or does it contains the Bearer string part?
+        if (authCookie != null && WebServer.checkJWT(authCookie) != null) {
             handler.handle(ctx);
             return;
         }
@@ -182,7 +155,7 @@ public class WebServer {
         // fall through, failsafe
         //ctx.status(401).result("Invalid token");
         ctx.header(Header.WWW_AUTHENTICATE, "Basic");
-        throw new UnauthorizedResponse();
+        throw new UnauthorizedResponse("Accesso non autorizzato");
     }
 
     private static boolean isNoAuthPath(String requestPath) {
@@ -240,7 +213,10 @@ public class WebServer {
                             openApiInfo.setTitle(main.getDescription().getName());
                             openApiInfo.setVersion(main.getDescription().getVersion());
                             openApiInfo.setDescription(main.getDescription().getDescription());
-                        }));
+                        })
+                        .withSecurity(new SecurityComponentConfiguration()
+                                .withSecurityScheme("BearerAuth", new BearerAuth())
+                        ));
     }
 
     public void get(String route, Handler handler) {
@@ -262,8 +238,7 @@ public class WebServer {
     public void addRoute(HandlerType httpMethod, String route, Handler handler) {
         // Checks to see if passed route is blocked in the config.
         // Note: The second check is for any blocked routes that start with a /
-        if (blockedPaths instanceof ConfigurationSection) {
-            final ConfigurationSection confBlockedPath = (ConfigurationSection) blockedPaths;
+        if (blockedPaths instanceof final ConfigurationSection confBlockedPath) {
             List<String> allBlockedPath = confBlockedPath.getStringList("all");
             List<String> blockedPathsByMethod = confBlockedPath.getStringList(httpMethod.toString().toLowerCase());
 

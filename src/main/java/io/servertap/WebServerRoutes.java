@@ -14,7 +14,8 @@ import java.util.logging.Logger;
 
 public final class WebServerRoutes {
 
-    private WebServerRoutes() {}
+    private WebServerRoutes() {
+    }
 
     public static void addV1Routes(ServerTapMain main, Logger log, LagDetector lagDetector, WebServer webServer,
                                    ConsoleListener consoleListener, ExternalPluginWrapperRepo externalPluginWrapperRepo) {
@@ -22,7 +23,8 @@ public final class WebServerRoutes {
 
         ApiV1Initializer api = new ApiV1Initializer(main, log, lagDetector, consoleListener, externalPluginWrapperRepo);
 
-        pr.post("login",api.getAuthApi()::login);
+        pr.post("login", api.getAuthApi()::login);
+        pr.post("refresh", api.getAuthApi()::refreshToken);
 
         pr.get("ping", api.getServerApi()::ping);
 

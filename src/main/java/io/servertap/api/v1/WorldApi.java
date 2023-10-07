@@ -39,9 +39,9 @@ public class WorldApi {
             summary = "Triggers a world save of all worlds",
             methods = {HttpMethod.POST},
             tags = {"Server"},
-            headers = {
-                    @OpenApiParam(name = "key")
-            },
+            security = @OpenApiSecurity(
+                    name = "BearerAuth"
+            ),
             responses = {
                     @OpenApiResponse(status = "200")
             }
@@ -69,9 +69,9 @@ public class WorldApi {
             summary = "Triggers a world save",
             methods = {HttpMethod.POST},
             tags = {"Server"},
-            headers = {
-                    @OpenApiParam(name = "key")
-            },
+            security = @OpenApiSecurity(
+                    name = "BearerAuth"
+            ),
             pathParams = {
                     @OpenApiParam(name = "uuid", description = "The UUID of the World to save")
             },
@@ -140,9 +140,9 @@ public class WorldApi {
             summary = "Downloads a ZIP compressed archive of the world's folder",
             methods = {HttpMethod.GET},
             tags = {"Server"},
-            headers = {
-                    @OpenApiParam(name = "key")
-            },
+            security = @OpenApiSecurity(
+                    name = "BearerAuth"
+            ),
             pathParams = {
                     @OpenApiParam(name = "uuid", description = "The UUID of the World to download")
             },
@@ -179,9 +179,9 @@ public class WorldApi {
             summary = "Downloads a ZIP compressed archive of all the worlds' folders",
             methods = {HttpMethod.GET},
             tags = {"Server"},
-            headers = {
-                    @OpenApiParam(name = "key")
-            },
+            security = @OpenApiSecurity(
+                    name = "BearerAuth"
+            ),
             responses = {
                     @OpenApiResponse(status = "200", content = @OpenApiContent(type = "application/zip")),
             }
@@ -217,9 +217,9 @@ public class WorldApi {
             path = "/v1/worlds",
             summary = "Get information about all worlds",
             tags = {"Server"},
-            headers = {
-                    @OpenApiParam(name = "key")
-            },
+            security = @OpenApiSecurity(
+                    name = "BearerAuth"
+            ),
             responses = {
                     @OpenApiResponse(status = "200", content = @OpenApiContent(from = World.class))
             }
@@ -235,9 +235,9 @@ public class WorldApi {
             path = "/v1/worlds/{uuid}",
             summary = "Get information about a specific world",
             tags = {"Server"},
-            headers = {
-                    @OpenApiParam(name = "key")
-            },
+            security = @OpenApiSecurity(
+                    name = "BearerAuth"
+            ),
             pathParams = {
                     @OpenApiParam(name = "uuid", description = "The uuid of the world")
             },

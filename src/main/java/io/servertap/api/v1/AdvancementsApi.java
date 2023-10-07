@@ -1,10 +1,7 @@
 package io.servertap.api.v1;
 
 import io.javalin.http.Context;
-import io.javalin.openapi.OpenApi;
-import io.javalin.openapi.OpenApiContent;
-import io.javalin.openapi.OpenApiParam;
-import io.javalin.openapi.OpenApiResponse;
+import io.javalin.openapi.*;
 import io.servertap.api.v1.models.Advancement;
 import org.bukkit.Bukkit;
 
@@ -15,9 +12,9 @@ public class AdvancementsApi {
             path = "/v1/advancements",
             summary = "Gets all server advancements",
             tags = {"Advancement"},
-            headers = {
-                    @OpenApiParam(name = "key")
-            },
+            security = @OpenApiSecurity(
+                    name = "BearerAuth"
+            ),
             responses = {
                     @OpenApiResponse(status = "200", content = @OpenApiContent(from = Advancement.class))
             }

@@ -22,7 +22,7 @@ public class ApiV1Initializer {
 
     public ApiV1Initializer(ServerTapMain main, Logger log, LagDetector lagDetector, ConsoleListener consoleListener,
                             ExternalPluginWrapperRepo externalPluginWrapperRepo) {
-        this.authApi = new AuthApi();
+        this.authApi = new AuthApi(main);
         this.websocketHandler = new WebsocketHandler(main, log, consoleListener);
         this.advancementsApi = new AdvancementsApi();
         this.economyApi = new EconomyApi(externalPluginWrapperRepo.getEconomyWrapper());
